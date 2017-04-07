@@ -1,7 +1,7 @@
 import React from 'react';
 import FeedItem from './feeditem';
 import StatusUpdateEntry from './statusupdateentry';
-import {getFeedData} from '../server';
+import {getFeedData, postStatusUpdate} from '../server';
 
 export default class Feed extends React.Component {
 
@@ -19,7 +19,7 @@ export default class Feed extends React.Component {
     };
   }
 
-  componentDidMount() {
+  refresh() {
     getFeedData(this.props.user, (feedData) => {
       // Note: setState does a *shallow merge* of the current state and the new
       // state. If state was currently set to {foo: 3}, and we setState({bar: 5}),
@@ -28,10 +28,24 @@ export default class Feed extends React.Component {
     });
   }
 
+  onPost(postContents) {
+    // Send to server.
+    // We could use geolocation to get a location, but let's fix it to Amherst
+    // for now.
+    postStatusUpdate(4, "Amherst, MA", postContents, () => {
+      // Database is now updated. Refresh the feed.
+      this.refresh();
+    });
+  }
+
+  componentDidMount() {
+    this.refresh();
+  }
+
   render() {
     return (
       <div>
-        <StatusUpdateEntry />
+        <StatusUpdateEntry onPost={(postContents) => this.onPost(postContents)} />
         {this.state.contents.map((feedItem) => {
             return (
               <FeedItem key={feedItem._id} data={feedItem} />
